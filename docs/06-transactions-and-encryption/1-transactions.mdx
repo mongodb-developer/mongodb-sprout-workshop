@@ -1,0 +1,40 @@
+# Transactions
+
+MongoDB introduced multi-document ACID transactions in version 4.0, enhancing its capabilities to ensure data 
+integrity across multiple documents, collections, and databases. This feature brought MongoDB closer to traditional 
+relational databases, providing a robust mechanism for handling complex transactional data operations.  
+
+## Key Concepts
+1. **ACID Properties:** MongoDB transactions ensure Atomicity, Consistency, Isolation, and Durability across multiple documents. 
+This means that a group of operations either all succeed together or fail together without affecting the database's consistency.
+2. **Snapshot Isolation:** MongoDB uses snapshot isolation to maintain consistency. This means that all reads within a transaction 
+will see a consistent snapshot of the database, and modifications made by a transaction are invisible to others until the transaction commits.
+3. **Change Streams:** MongoDB allows applications to access real-time data changes without the complexity and risk of tailing the oplog. 
+This feature, introduced in MongoDB 3.6, enables applications to stream changes to documents in a database in real-time.  
+
+## Example Scenario: Implementing a Shopping Cart
+Let’s consider a scenario where a shopping cart application needs to manage product inventory and customer carts atomically to prevent selling more 
+items than available in stock.  
+
+Step 1: Setting Up Your Environment
+Clone the Java project using Git and set up the project:  
+```bash
+git ...
+```
+
+## Step 2: Understanding the Code Structure
+The project contains two main classes:
+
+ - ChangeStreams.java: Monitors data changes in MongoDB.
+ - Transactions.java: Handles the transaction logic.
+## Step 3: Running the Demo
+
+## Step 4: Observing Behaviors
+1. **Without Transaction:** Attempt to update stock and add items to the cart separately. This can potentially lead 
+to inconsistencies if one operation fails.
+2. **With Transaction:** Perform both operations atomically. If the stock is insufficient, the transaction will roll back, 
+preventing any changes to the database and ensuring consistency.  
+
+## Conclusion
+MongoDB’s support for multi-document transactions allows developers to handle complex data changes with ease, ensuring 
+data integrity and consistency across operations. This makes MongoDB suitable for applications requiring robust transactional support, similar to traditional relational databases.

@@ -1,0 +1,61 @@
+# CSFLE
+This section explores the integration of MongoDB's Client-Side Field Level Encryption (CSFLE) with Spring Data MongoDB, 
+focusing on securing data directly from the client side before it is stored in the database. This approach is crucial 
+for compliance with data privacy laws and regulations.
+
+## Key Concepts
+ - **Client-Side Encryption:** Data is encrypted on the client side before being sent to the server. Only encrypted data is stored in the database, ensuring that sensitive information is protected.
+ - **Key Management:** CSFLE uses a Key Management Service (KMS) to handle encryption keys securely. The keys are never exposed to the MongoDB server.
+ - **Automatic Encryption:** Developers can specify which fields should be encrypted. MongoDB's client library handles the encryption and decryption transparently.
+
+## Setup Key Vault Collection
+The first step involves setting up the key vault collection, which stores the encryption keys. 
+
+## Configuration:
+Create a unique index on the keyAltNames field to ensure each key is easily retrievable without duplication.
+Example Java Code Snippet:
+```java
+MongoDatabase db = mongoClient.getDatabase("encryption");
+MongoCollection<Document> keyVault = db.getCollection("__keyVault");
+keyVault.createIndex(Indexes.ascending("keyAltNames"), new IndexOptions().unique(true));
+```
+
+## Creating Data Encryption Keys (DEKs)
+Data Encryption Keys (DEKs) are used to encrypt the sensitive fields specified in the MongoDB documents.
+
+DEK Generation Process:
+Utilize the ClientEncryption class to generate DEKs.
+Store these keys in the key vault collection, ensuring they are managed securely and efficiently.
+Entity Encryption with JSON Schemas
+Define your application data models using Spring Data MongoDB and annotate fields that require encryption.
+
+Example Entity Class:
+```java
+@Document(collection = "users")
+public class User {
+    @Id
+    private String id;
+    @Encrypted(keyId = "userKey", algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic")
+    private String ssn; // Social Security Number
+}
+```
+This annotation tells Spring Data MongoDB to encrypt the ssn field using the specified encryption key and algorithm.
+
+## SpEL Expression Evaluation
+Spring Expression Language (SpEL) is used to dynamically assign encryption keys based on the document context. This feature allows for flexible encryption configurations that can vary per document.
+
+## JSON Schema and MongoClient Connection
+MongoDB uses JSON Schema to specify which fields should be encrypted. This schema is configured in the MongoClient settings, which enables automatic encryption without altering application logic.
+
+MongoClient Customization:
+```java
+MongoClientSettings settings = MongoClientSettings.builder()
+    .autoEncryptionSettings(autoEncryptionSettings)
+    .build();
+```
+This settings object configures the client instance to automatically encrypt and decrypt fields based on the defined JSON Schema.
+
+## Conclusion
+Integrating CSFLE with Spring Data MongoDB provides a powerful tool for developers to secure sensitive data, ensuring that encryption is handled 
+transparently and efficiently. By leveraging CSFLE, applications can meet stringent security and compliance requirements while maintaining performance 
+and data integrity.
