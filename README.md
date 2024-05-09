@@ -7,14 +7,10 @@ This is a template to create new Workshop documentation sites. Contains info on 
 ### Installation
 
 ```
-npx create-docusaurus@latest name-of-my-new-awesome-workshop https://github.com/mongodb-developer/docusaurus-workshop
-cd name-of-my-new-awesome-workshop
+npx create-docusaurus@latest mongodb-sprout-workshop https://github.com/mongodb-developer/docusaurus-workshop
+cd mongodb-sprout-workshop
 npm start
 ```
-
-As you don't want to get the changes of these sample pages, just delete the `.git` folder and then `git init`.
-
-Open `docusaurus.config.js` and change at least the `workshopName`
 
 ### Local Development
 
