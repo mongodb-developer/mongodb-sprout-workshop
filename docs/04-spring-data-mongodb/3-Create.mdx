@@ -1,0 +1,45 @@
+# Create
+
+Welcome to the begininning of CRUD! MongoRepository provides methods for creating, 
+reading, updating, and deleting documents in a MongoDB collection. It includes methods 
+like `save()`, `findById()`, `findAll()`, `deleteById()`, etc.  
+
+The create operation involves inserting or adding new data to the database, creating a new record or document.
+## save
+To create a single grade, you can use the `save()` method provided by the `StudentRepository`. 
+Create a new instance of the `Grade` class, set its attributes, and call the `save()` method to persist it to the database.
+
+```java
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Service
+public class StudentService {
+    @Autowired
+    private StudentRepository repository;
+
+    public Grade saveGrade(Grade grade) {
+        return repository.save(grade);
+    }
+}
+```
+## saveAll
+To create multiple grades at once, use the `saveAll()` method provided by the `StudentRepository`. Pass a list of `Grade` objects 
+to this method, and it will save all the grades in a single batch operation.
+
+```java
+public List<Grade> saveGrades(List<Grade> grades) {
+    return repository.saveAll(grades);
+}
+```
+
+## Insert
+Alternatively, you can use the `insert()` method provided by the `StudentRepository` to insert a grade into the database. 
+This method differs from `save()` in that it only performs an insert operation and does not perform an update if 
+the grade already exists.
+
+```java
+public Grade insertGrade(Grade grade) {
+    return repository.insert(grade);
+}
+```

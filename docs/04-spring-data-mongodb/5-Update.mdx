@@ -1,0 +1,86 @@
+# Update
+Updating records involves modifying existing documents in the database. `MongoRepository` provides 
+methods to perform these updates, such as `save()` (which updates if the document exists), and custom query methods.
+
+## save (Update a Single Document)
+To update a single document, you can use the `save()` method. This method will update the document if it already 
+exists based on its `id`, or insert it if it does not exist.
+
+```java
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Service
+public class StudentService {
+    @Autowired
+    private StudentRepository repository;
+
+    public Grade updateGrade(Grade grade) {
+        return repository.save(grade);
+    }
+}
+```
+
+See if you can write a method that adds a comment to an existing grade in the `Update.java` class.
+
+## Upsert
+Upsert refers to updating an existing document or inserting it if it does not exist. This can be achieved using the `save()` method as well.
+
+To upsert a grade based on studentId and classId:
+
+```java
+@Autowired
+private StudentRepository repository;
+
+public void upsertGrade(double studentId, double classId, Grade grade) {
+    Grade existingGrade = repository.findByStudentIdAndClassId(studentId, classId);
+    if (existingGrade == null) {
+        grade.setId(new ObjectId());
+        grade.setStudentId(studentId);
+        grade.setClassId(classId);
+        grade.setScores(List.of(new Score("homework", 50d)));
+        grade.setComment("You will learn a lot if you read the MongoDB blog!");
+    } else {
+        existingGrade.getScores().add(new Score("quiz", 70d));
+    }
+    Grade upsertedGrade = repository.save(existingGrade != null ? existingGrade : grade);
+    System.out.println("Upserted grade: " + upsertedGrade);
+}
+```
+
+## saveAll (Update Multiple Documents)
+To update multiple documents at once, use the `saveAll()` method provided by the `StudentRepository`. 
+Pass a list of `Grade` objects to this method, and it will update all the grades in a single batch operation.
+
+To update all grades with studentId greater than or equal to 10001:
+
+```java
+@Autowired
+private StudentRepository repository;
+
+public void updateGradesForStudentIdGreaterThanEqual(double studentId) {
+    List<Grade> grades = repository.findByStudentIdGreaterThanEqual(studentId);
+    grades.forEach(g -> g.setComment("Updated for all grades with student_id >= 10001"));
+    repository.saveAll(grades);
+    System.out.println("Updated all grades with student_id >= 10001.");
+}
+```
+
+## Find and Update
+To find a document and then update it, you first retrieve the document, modify it, and then save it back to the database.
+
+To find a grade by studentId and update it:
+
+```java
+@Autowired
+private StudentRepository repository;
+
+public void findAndUpdateGrade(double studentId, String newComment) {
+    Grade grade = repository.findByStudentId(studentId);
+    if (grade != null) {
+        grade.setComment(newComment);
+        Grade updatedGrade = repository.save(grade);
+        System.out.println("Updated grade after finding: " + updatedGrade);
+    }
+}
+```

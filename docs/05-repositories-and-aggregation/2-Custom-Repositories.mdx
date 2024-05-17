@@ -1,0 +1,95 @@
+# Customizing Individual Repositories in Spring Data
+Spring Data provides various options to create query methods with little coding. However, 
+when those options don’t fit your needs, you can provide your own custom implementation for 
+repository methods. This section describes how to do that.
+
+## Customizing Repositories
+To add custom functionality to a repository, follow these steps:
+
+1. **Define a Fragment Interface:** Create an interface for the custom functionality.
+2. **Implement the Fragment Interface:** Provide the implementation for the custom functionality.
+3. **Extend the Fragment Interface:** Make your repository interface extend the fragment interface.
+
+## 1. Define a Fragment Interface
+
+Create an interface with custom methods for your repository. Here is the example from our `SalesCustomRepository.java`:
+
+```java
+package com.mongodb.quickstart.repositories;
+
+import java.util.List;
+import com.mongodb.quickstart.dtos.*;
+
+public interface SalesCustomRepository {
+    List<TotalSalesByLocationDTO> calculateTotalSalesByLocation();
+    List<AverageItemPricePerStoreDTO> averageItemPricePerStore();
+    List<DistinctCustomersCountDTO> countDistinctCustomersByLocation();
+    List<SalesByDayOfWeekDTO> totalSalesByDayOfWeek();
+    List<SalesPerformanceDTO> compareSalesWithAndWithoutCoupons();
+    List<RevenueByLocationDTO> calculateTotalRevenueByLocation();
+    List<CustomerSatisfactionDTO> averageCustomerSatisfactionByLocation();
+}
+```
+
+## 2. Implement the Fragment Interface
+
+Create a class that implements the custom interface. This is just a snippet from our `SalesCustomRepositoryImpl.java` class:
+
+```java
+package com.mongodb.quickstart.repositories;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.*;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.stereotype.Repository;
+import com.mongodb.quickstart.dtos.*;
+
+import java.util.List;
+
+@Repository
+@Primary
+public class SalesCustomRepositoryImpl implements SalesCustomRepository {
+
+    @Autowired
+    private MongoTemplate mongoTemplate;
+
+    // Implementation of custom methods
+
+    @Override
+    public List<TotalSalesByLocationDTO> calculateTotalSalesByLocation() {
+        GroupOperation groupStage = Aggregation.group("storeLocation").count().as("totalSales");
+        Aggregation aggregation = Aggregation.newAggregation(groupStage);
+        AggregationResults<TotalSalesByLocationDTO> results = mongoTemplate.aggregate(aggregation, "sales", TotalSalesByLocationDTO.class);
+        return results.getMappedResults();
+    }
+
+    ...
+}
+```
+
+## 3. Extend the Fragment Interface
+
+Make your repository interface extend the fragment interface to combine the CRUD and custom functionality. By adding ∂our reference
+to our custom repository we are able to use the methods created in both, allowing us to add methods that utilize `MongoTemplate`
+with `MongoRepository`.
+
+```java
+package com.mongodb.quickstart.repositories;
+
+import org.springframework.data.mongodb.repository.MongoRepository;
+import com.mongodb.quickstart.models.Sale;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface SalesRepository extends MongoRepository<Sale, String>, SalesCustomRepository {
+    // Declare query methods here if needed
+}
+```
+
+### Key Points
+1. **Fragment Interface:** Create an interface for the custom methods.
+2. **Fragment Implementation:** Implement the interface in a class with the Impl suffix.
+3. **Extend the Repository Interface:** Extend the fragment interface in your repository to combine CRUD and custom functionality.

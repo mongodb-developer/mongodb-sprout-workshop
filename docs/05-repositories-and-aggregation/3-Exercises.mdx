@@ -1,0 +1,132 @@
+# Time to Code!
+[Spring Support for MongoDB Aggregations](https://docs.spring.io/spring-data/mongodb/reference/mongodb/aggregation-framework.html)
+[MongoDB Aggregation Operations](https://www.mongodb.com/docs/manual/aggregation/)
+
+## Question 1: Total Sales by Location
+Calculate the total sales grouped by each location and return a result that includes the location's name (or ID) and the total sales amount.
+
+<details>
+<summary>Steps to Implement:</summary>
+<div>
+1. **GroupOperation:** Group by storeLocation and count the total sales.
+2. **Aggregation:** Combine the group operation into an aggregation.
+3. **Execution:** Execute the aggregation and return the results.
+</div>
+</details>
+
+Test with:
+```bash
+ mvn spring-boot:run -Dspring-boot.run.arguments=total-sales-by-location
+```
+
+## Question 2: Customer Satisfaction by Location
+Calculate the average customer satisfaction rating for each store location, based on a 'customer.satisfaction' field in each sale document. Only accept satisfaction ratings that are greater than or equal to 1.
+
+<details>
+<summary>Steps to Implement:</summary>
+<div>
+1. **MatchOperation:** Filter documents with customer.satisfaction greater than or equal to 1.
+2. **GroupOperation:** Group by storeLocation and calculate the average satisfaction.
+3. **ProjectionOperation:** Project the results to format the output.
+4. **Aggregation:** Combine the operations into an aggregation.
+5. **Execution:** Execute the aggregation and return the results.
+</div>
+</details>
+
+Test with:
+```bash
+mvn spring-boot:run -Dspring-boot.run.arguments=average-customer-satisfaction
+```
+
+## Question 3: Average Price of Items per Store
+Calculate the average price of items sold per store and return a result that includes the store's name (or ID) and the average price.
+
+<details>
+<summary>Steps to Implement:</summary>
+<div>
+1. **UnwindOperation:** Unwind the items array to process each item separately.
+2. **GroupOperation:** Group by storeLocation and calculate the average price of items.
+3. **Aggregation:** Combine the operations into an aggregation.
+4. **Execution:** Execute the aggregation and return the results.
+</div>
+</details>
+
+Test with:
+```bash
+mvn spring-boot:run -Dspring-boot.run.arguments=average-item-price-per-store
+```
+
+## Question 4: Number of Distinct Customers
+Count the number of distinct customers and return a result that includes the identifier for grouping and the count of customers.
+
+<details>
+<summary>Steps to Implement:</summary>
+<div>
+1. **GroupOperation:** Group by storeLocation and collect unique customers using addToSet.
+2. **ProjectionOperation:** Project the size of the unique customers set.
+3. **Aggregation:** Combine the operations into an aggregation.
+4. **Execution:** Execute the aggregation and return the results.
+</div>
+</details>
+
+Test with:
+```bash
+mvn spring-boot:run -Dspring-boot.run.arguments=count-distinct-customers
+```
+
+## Question 5: Total Sales by Day of the Week
+Calculate the total sales grouped by each day of the week and return a result that includes the day's name (or ID) and the total sales amount.
+
+<details>
+<summary>Steps to Implement:</summary>
+<div>
+1. **ProjectionOperation:** Project the day of the week from the saleDate.
+2. **GroupOperation:** Group by dayOfWeek and count the total sales.
+3. **Aggregation:** Combine the operations into an aggregation.
+4. **Execution:** Execute the aggregation and return the results.
+</div>
+</details>
+
+Test with:
+```bash
+mvn spring-boot:run -Dspring-boot.run.arguments=total-sales-by-day-of-week
+```
+
+## Question 6: Sum of Sales Revenue by Location
+Calculate the total revenue from sales grouped by each location and return a result that includes the location's name (or ID) and the total revenue. Sort these from highest to lowest.
+
+<details>
+<summary>Steps to Implement:</summary>
+<div>
+1. **UnwindOperation:** Unwind the items array to process each item separately.
+2. **ProjectionOperation:** Calculate the total revenue for each item.
+3. **GroupOperation:** Group by storeLocation and sum the total revenue.
+4. **ProjectionOperation:** Project the final results.
+5. **SortOperation:** Sort the results by total revenue in descending order.
+6. **Aggregation:** Combine the operations into an aggregation.
+7. **Execution:** Execute the aggregation and return the results.
+</div>
+</details>
+
+Test with:
+```bash
+mvn spring-boot:run -Dspring-boot.run.arguments=revenue-by-location
+```
+
+## Question 7: Sales Performance Before and After Applying Coupons
+Compare the number of sales transactions with and without coupons at each store location and return a detailed breakdown.
+
+<details>
+<summary>Steps to Implement:</summary>
+<div>
+1. **GroupOperation:** Group by storeLocation and count the sales with and without coupons using conditional operators.
+2. **ProjectionOperation:** Project the results to format the output.
+3. **Aggregation:** Combine the operations into an aggregation.
+4. **Execution:** Execute the aggregation and return the results.
+</div>
+</details>
+
+Test with:
+```bash
+mvn spring-boot:run -Dspring-boot.run.arguments=sales-performance
+```

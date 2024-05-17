@@ -1,0 +1,93 @@
+# Delete
+Deleting records involves removing existing documents from the database. MongoRepository provides methods 
+to perform these deletions, such as `delete()`, `deleteById()`, `deleteAll()`, and custom query methods.
+
+## delete (Delete a Single Document)
+To delete a single document, you can use the `delete()` method. This method will delete the specified document 
+from the database.
+
+```java
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Service
+public class StudentService {
+    @Autowired
+    private StudentRepository repository;
+
+    public void deleteGrade(Grade grade) {
+        repository.delete(grade);
+    }
+}
+```
+
+To delete a grade by `studentId`:
+```java
+@Autowired
+private StudentRepository repository;
+
+public void deleteGradeByStudentId(double studentId) {
+    Grade grade = repository.findByStudentId(studentId);
+    if (grade != null) {
+        repository.delete(grade);
+        System.out.println("Deleted grade: " + grade);
+    }
+}
+```
+
+## deleteById
+To delete a document by its id, you can use the `deleteById()` method. This method will delete the document 
+identified by the given id.
+
+To delete a grade by its id:
+
+```java
+@Autowired
+private StudentRepository repository;
+
+public void deleteGradeById(String gradeId) {
+    repository.deleteById(gradeId);
+    System.out.println("Deleted grade with id: " + gradeId);
+}
+```
+
+## deleteAll (Delete Multiple Documents)
+To delete multiple documents at once, use the `deleteAll()` method provided by the `StudentRepository`. 
+You can pass a list of `Grade` objects to this method, and it will delete all the specified grades.
+
+To delete all grades with `studentId` greater than or equal to 10000:
+
+```java
+@Autowired
+private StudentRepository repository;
+
+public void deleteGradesForStudentIdGreaterThanEqual(double studentId) {
+    repository.deleteAll(repository.findByStudentIdGreaterThanEqual(studentId));
+    System.out.println("Deleted all grades with student_id >= " + studentId);
+}
+```
+
+## deleteAll (Drop Entire Collection)
+To delete all documents in a collection, you can use the `deleteAll()` method without any arguments. 
+This method will delete all the documents in the specified collection.
+
+To delete the entire contents of the grades collection:
+
+```java
+@Autowired
+private StudentRepository repository;
+
+public void deleteAllGrades() {
+    repository.deleteAll();
+    System.out.println("Deleted the entire grades collection.");
+}
+```
+
+Depending on your reasoning for deleting the entire contents of a collecion, it might make more sense 
+for you to just drop the collection. In which case, using the `dropCollection()` method from `MongoTemplate` is a far more 
+performant choice;
+
+```java
+mongoTemplate.dropCollection("collectionName");
+```
+

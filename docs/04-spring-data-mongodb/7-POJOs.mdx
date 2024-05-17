@@ -1,0 +1,76 @@
+# Mapping POJOs
+
+In Spring Data MongoDB, POJOs (Plain Old Java Objects) are mapped to MongoDB documents using annotations. 
+This mapping allows for the conversion between Java objects and MongoDB documents seamlessly. Here’s a step-by-step 
+guide on how POJOs are mapped with Spring Data MongoDB:
+
+## Define the POJO Class
+Start by defining your POJO class that represents the MongoDB document. Use annotations to specify how the fields 
+of the class are mapped to the fields of the MongoDB document.
+
+```java
+package com.mongodb.quickstart.models;
+
+import org.bson.types.ObjectId;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+
+import java.util.List;
+
+@Document(collection = "grades")
+public class Grade {
+
+    @Id
+    private ObjectId id;
+
+    @Field("studentId")
+    private String studentId;
+
+    private Double classId;
+    private List<Score> scores;
+    private String comment;
+
+    // Getters and Setters
+}
+```
+
+## Use Annotations for Mapping
+Annotations help Spring Data MongoDB understand how to map the fields in your Java class to the fields in the MongoDB document:
+
+ - `@Document`: Marks a class as being a MongoDB document. The `collection` attribute specifies which collection to store the document in.
+ - `@Id`: Marks a field as the primary key (unique identifier) of the document.
+ - `@Field`: Maps a Java field to a field in the MongoDB document.
+
+## Nested Objects
+You can also map nested objects within a document. For example, if your `Sale` document contains a `Customer` object and a list of `Item` objects, 
+define these nested classes separately and use them in your main POJO.
+
+```java
+public class Score {
+    private String type;
+    private Double score;
+
+    // Getters and Setters
+}
+
+```
+## 4. Repository Definition
+We now circle back to our repository. Define a repository interface to perform CRUD operations on your MongoDB documents. 
+Spring Data MongoDB provides the MongoRepository interface for this purpose.
+
+```java
+package com.mongodb.quickstart.repositories;
+
+import org.springframework.data.mongodb.repository.MongoRepository;
+import com.mongodb.quickstart.models.Sale;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface StudentRepository extends MongoRepository<Grade, String> {
+    // Additional query methods can be defined here
+}
+```
+
+By using these annotations and repository interfaces, Spring Data MongoDB makes it easy to map POJOs to MongoDB documents and 
+perform database operations with minimal code.

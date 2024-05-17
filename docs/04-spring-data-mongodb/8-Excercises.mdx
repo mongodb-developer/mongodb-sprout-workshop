@@ -1,0 +1,76 @@
+# Time to Code!
+Now that we've done an overview of CRUD operations with Spring Data MongoDB,
+it's time to implement what we've learned. Everything you need to get coding is available in the 
+previous sections. Once you think you have everything implemented, run the command and see if 
+everything runs as expected.
+
+## Create
+In `Create.java`, see if you can implement the following methods:
+
+1. Save `grade1` to your MongoDB database.
+2. Save the list of grades, `grades` to your database.
+
+To test, run;
+```bash
+mvn spring-boot:run -Dspring-boot.run.arguments=create
+```
+
+## Read
+In `Read.java`, see if you can implement the following methods:
+
+1. Find a grade by student ID
+2. Find all grades with student IDs greater than or equal to 10000
+3. Find all grades by student ID and limit by class ID
+
+To test, run;
+```bash
+mvn spring-boot:run -Dspring-boot.run.arguments=read
+```
+
+## Update
+In `Update.java`, see if you can implement the following methods:
+
+1. Update a Document by Adding a Comment: Find a document by `studentId` 
+and add a comment to it.
+2. Upsert a Document: Find a document by `studentId` and `classId`. If the 
+document exists, update it by adding a new score. If it doesn't exist, 
+create a new document with the provided details.
+3. Update Multiple Documents: Find all documents where `studentId` is 
+greater than or equal to 10001, and update them.
+4. Find and Update a Document: Find a document by `studentId`, update 
+it, and save the changes.
+
+To test, run;
+```bash
+mvn spring-boot:run -Dspring-boot.run.arguments=update
+```
+
+## Delete
+In `Delete.java`, implement the following methods to practice deleting 
+documents in MongoDB:
+
+1. Delete a Single Document: Delete a grade it if it exists.
+2. Find and Delete a Document: Find a document with student id of 10002 
+by `studentId`, then delete it.
+3. Delete Multiple Documents: Find all documents where `studentId` is 
+greater than or equal to 10000, and delete them.
+4. Delete all documents in the collection, effectively dropping the 
+collection.
+
+To test, run;
+```bash
+mvn spring-boot:run -Dspring-boot.run.arguments=delete
+```
+
+## Mapping POJOs
+Lastly, let's map a POJO to our Document. In `MappingPOJO.java`, create 
+a grade called `newGrade` that has a unique `ObjectId`, a `studentId` 
+of 10003 (decimal), a `classId` of 10 (decimal).
+
+Also, when creating the new grade, add a score for a homework with a 
+score of 50 (decimal).
+
+To test, run;
+```bash
+mvn spring-boot:run -Dspring-boot.run.arguments=mapping
+```

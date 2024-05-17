@@ -1,0 +1,25 @@
+# Connecting to your MongoDB Database
+
+You'll need your connection string from your MongoDB Cluster:
+
+```bash
+spring.data.mongodb.uri=mongodb+srv://<user>:<password>@<Cluster>>t/?retryWrites=true&w=majority
+spring.data.mongodb.database=sample_training
+```
+From here, Spring Data MongoDB is ready to connect to our database.
+
+You can see in our `Connection.class` how we setup a `MongoClient` using these details. 
+```
+    public static void main(String[] args) {
+        String connectionString = System.getProperty("mongodb.uri");
+        try (MongoClient mongoClient = MongoClients.create(connectionString)) {
+            System.out.println("=> Connection successful: " + preFlightChecks(mongoClient));
+            System.out.println("=> Print list of databases:");
+            List<Document> databases = mongoClient.listDatabases().into(new ArrayList<>());
+            databases.forEach(db -> System.out.println(db.toJson()));
+        }
+    }
+```
+
+But with Spring Data MongoDB, we don't need to run any of this. It is all taken care under the hood.
+

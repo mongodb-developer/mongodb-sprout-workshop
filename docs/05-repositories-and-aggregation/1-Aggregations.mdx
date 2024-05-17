@@ -1,0 +1,74 @@
+# Aggregations
+Aggregation operations in MongoDB process data records and return calculated results. 
+They combine values from multiple documents and can perform different operations on 
+this combined data to produce a single result.
+
+## Basic Concepts
+The Aggregation Framework in Spring Data MongoDB is built on three main components: `Aggregation`, `AggregationDefinition`, and `AggregationResults`.
+
+## Aggregation
+- **Definition:** Represents a MongoDB aggregation operation and holds the instructions for the aggregation pipeline.
+- **Creation:** Created using the `newAggregation(...)` method of the Aggregation class, which takes a list of aggregation operations.
+- **Execution:** Run using the aggregate method of the `MongoTemplate`, which takes the desired output class as a parameter.
+
+```java
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+
+Aggregation agg = newAggregation(
+    pipelineOp1(),
+    pipelineOp2(),
+    pipelineOpn()
+);
+
+AggregationResults<OutputType> results = mongoTemplate.aggregate(agg, "INPUT_COLLECTION_NAME", OutputType.class);
+List<OutputType> mappedResult = results.getMappedResults();
+```
+
+The Spring Data MongoDB has support for the following Operations & Stages
+Supported Aggregation Operations & Stages
+The MongoDB Aggregation Framework provides the following types of aggregation stages and operations:
+- addFields - AddFieldsOperation
+
+- bucket / bucketAuto - BucketOperation / BucketAutoOperation
+
+- count - CountOperation
+
+- densify - DensifyOperation
+
+- facet - FacetOperation
+
+- geoNear - GeoNearOperation
+
+- graphLookup - GraphLookupOperation
+
+- group - GroupOperation
+
+- limit - LimitOperation
+
+- lookup - LookupOperation
+
+- match - MatchOperation
+
+- merge - MergeOperation
+
+- project - ProjectionOperation
+
+- redact - RedactOperation
+
+- replaceRoot - ReplaceRootOperation
+
+- sample - SampleOperation
+
+- set - SetOperation
+
+- setWindowFields - SetWindowFieldsOperation
+
+- skip - SkipOperation
+
+- sort / sortByCount - SortOperation / SortByCountOperation
+
+- unionWith - UnionWithOperation
+
+- unset - UnsetOperation
+
+- unwind - UnwindOperation 

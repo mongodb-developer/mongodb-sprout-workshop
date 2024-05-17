@@ -1,0 +1,65 @@
+# Read
+We have our documents stored, but now we want to read them! Let's start with two common operations:
+- `findAll()`
+- `findById()`
+
+
+## findAll
+To retrieve all the grades form the database, all you need is the `findAll()` method provided by the `StudentRepository`. 
+This method will return all the grade documents present in the grades collection.
+
+```java
+public List<Grade> getAllGrades() {
+    return repository.findAll();
+}
+```
+
+## findById
+To retrieve individual documents, you can use the `findById()` method provided by the `StudentRepository`. This allows you 
+to retrieve an individual document from the database, identified by the `ObjectId`.
+
+```java
+public Optional<Grade> getGradeById(String id) {
+    return repository.findById(id);
+}
+```
+
+## Query Generation
+While these methods are powerful as they are, it only touches on the capabilities of `MongoRepository`. Query generation allows 
+us to build queries solely based of the method names. If we look back on our document model for this collection;
+
+```json
+{
+  "_id": ObjectId,
+  "studentId": double,
+  "classId": double,
+  "scores": [
+    {
+      "type": String,
+      "score": double
+    }
+  ],
+  "comment": String
+}
+```
+
+Imagine if you wanted to search by `comment`. With `MongoRepository`, all you have to do is create a method called `findByComment(String comment)` 
+and it will generate a query to find documents with a specific comment.
+
+There are a number of ways you can adjust these methods, such as paging, iterating large results, sorting & limiting, and 
+if you want to read about the nitty gritty of each of these, head over to the 
+[Spring Documentation](https://docs.spring.io/spring-data/mongodb/reference/repositories/query-methods-details.html).  
+
+In simple terms, When creating query method names, they are split into two parts: the **subject** and the **predicate**.
+
+1. **Subject:** The first part (like findBy or existsBy) tells what the query will do.
+2. **Predicate:** The second part describes the conditions of the query.
+
+The subject can include additional words that describe the query. Any words between `find` (or other starting keywords) 
+and `By` are just for description, unless they are special keywords like `Distinct` (to ensure unique results) or 
+`Top`/`First` (to limit the number of results). You can see what each word maps to in the 
+[Spring documentation](https://docs.spring.io/spring-data/mongodb/reference/repositories/query-keywords-reference.html), 
+and it is largely intuitive.
+
+For example, in the method `findTop3ByAge`, `findTop3` is the subject, and `ByAge` is the predicate. The `Top3` indicates 
+that the query should return the first three results based on the `Age` condition.
