@@ -3,6 +3,9 @@ Aggregation operations in MongoDB process data records and return calculated res
 They combine values from multiple documents and can perform different operations on 
 this combined data to produce a single result.
 
+With an aggregation, each step of the pipeline takes in a document/documents, and transforms the data by 
+applying an operation, and then the next stage takes in the output of this stage to apply the next operation. 
+
 ## Basic Concepts
 The Aggregation Framework in Spring Data MongoDB is built on three main components: `Aggregation`, `AggregationDefinition`, and `AggregationResults`.
 
@@ -24,9 +27,94 @@ AggregationResults<OutputType> results = mongoTemplate.aggregate(agg, "INPUT_COL
 List<OutputType> mappedResult = results.getMappedResults();
 ```
 
-The Spring Data MongoDB has support for the following Operations & Stages
-Supported Aggregation Operations & Stages
-The MongoDB Aggregation Framework provides the following types of aggregation stages and operations:
+## Let's Look at an Example
+The `MatchOperation` in Spring Data MongoDB is used to filter documents in the aggregation pipeline. It is equivalent to the `$match` stage in 
+MongoDB's aggregation framework. The `MatchOperation` allows you to specify criteria to select documents that match specific conditions, similar 
+to the find query.
+
+To create a `MatchOperation`, you use the Criteria class to define the conditions. 
+
+### Example
+Assume you have a collection of sales data and you want to filter the documents where the `storeLocation` is 
+"New York" and the `customer.satisfaction` is greater than or equal to 4.
+
+1. **Define the Criteria:** Use the Criteria class to define the filtering conditions.
+2. **Create the MatchOperation:** Use the `Aggregation.match` method with the defined `Criteria`.
+3. **Build the Aggregation:** Combine the `MatchOperation` with other operations in the aggregation pipeline.
+4. **Execute the Aggregation:** Use the `MongoTemplate` to execute the aggregation.
+
+
+Here is a complete example of how to use `MatchOperation` in Spring Data MongoDB:
+
+```java
+package com.mongodb.quickstart.repositories;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.aggregation.MatchOperation;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.stereotype.Repository;
+import com.mongodb.quickstart.models.Sale;
+import com.mongodb.quickstart.dtos.SaleDTO;
+
+import java.util.List;
+
+@Repository
+public class SalesCustomRepositoryImpl implements SalesCustomRepository {
+
+    @Autowired
+    private MongoTemplate mongoTemplate;
+
+    public List<SaleDTO> findSalesInNewYorkWithHighSatisfaction() {
+        // Step 1: Define the Criteria
+        Criteria criteria = Criteria.where("storeLocation").is("New York")
+                                    .and("customer.satisfaction").gte(4);
+
+        // Step 2: Create the MatchOperation
+        MatchOperation matchStage = Aggregation.match(criteria);
+
+        // Step 3: Build the Aggregation
+        Aggregation aggregation = Aggregation.newAggregation(matchStage);
+
+        // Step 4: Execute the Aggregation
+        AggregationResults<SaleDTO> results = mongoTemplate.aggregate(aggregation, "sales", SaleDTO.class);
+
+        return results.getMappedResults();
+    }
+}
+```
+
+### Breakdown of the Code
+1. Define the `Criteria`:
+    ```java
+    Criteria criteria = Criteria.where("storeLocation").is("New York")
+                                .and("customer.satisfaction").gte(4);
+    ```
+    - This defines a filter to select documents where storeLocation is "New York" and `customer.satisfaction` is greater than or equal to 4.
+2. Create the `MatchOperation`:
+    ```java
+    MatchOperation matchStage = Aggregation.match(criteria);
+    ```
+    - This creates a `MatchOperation` with the defined criteria.
+3. Build the Aggregation:
+    ```java
+    Aggregation aggregation = Aggregation.newAggregation(matchStage);
+    ```
+    - This constructs an aggregation pipeline with only the MatchOperation. You can add more stages as needed.
+4. Execute the Aggregation:
+    ```java
+    AggregationResults<SaleDTO> results = mongoTemplate.aggregate(aggregation, "sales", SaleDTO.class);
+    ```
+    - This executes the aggregation on the "sales" collection and maps the results to SaleDTO objects.
+
+
+The `MatchOperation` is a way to filter documents in an aggregation pipeline. By defining criteria with the `Criteria` class 
+and using the `Aggregation.match` method, you can filter documents based on conditions in Spring Data MongoDB.
+
+## Supported Aggregation Operations & Stages
+The Spring Data MongoDB has support for the following Operations & Stages:
 - addFields - AddFieldsOperation
 
 - bucket / bucketAuto - BucketOperation / BucketAutoOperation
