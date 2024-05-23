@@ -7,7 +7,7 @@ This is a template to create new Workshop documentation sites. Contains info on 
 ### Installation
 
 ```
-npx create-docusaurus@latest mongodb-sprout-workshop https://github.com/mongodb-developer/docusaurus-workshop
+npx create-docusaurus@latest mongodb-sprout-workshop https://github.com/timotheekelly/mongodb-sprout-workshop
 cd mongodb-sprout-workshop
 npm start
 ```
