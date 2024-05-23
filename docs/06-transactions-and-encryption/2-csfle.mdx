@@ -3,59 +3,347 @@ This section explores the integration of MongoDB's Client-Side Field Level Encry
 focusing on securing data directly from the client side before it is stored in the database. This approach is crucial 
 for compliance with data privacy laws and regulations.
 
-## Key Concepts
- - **Client-Side Encryption:** Data is encrypted on the client side before being sent to the server. Only encrypted data is stored in the database, ensuring that sensitive information is protected.
- - **Key Management:** CSFLE uses a Key Management Service (KMS) to handle encryption keys securely. The keys are never exposed to the MongoDB server.
- - **Automatic Encryption:** Developers can specify which fields should be encrypted. MongoDB's client library handles the encryption and decryption transparently.
+## How it Works
+CSFLE encrypts sensitive data before it reaches the MongoDB cluster, making the data remain secure during transit 
+and at rest. The process involves generating a master key, creating Data Encryption Keys (DEK), encrypting specific 
+fields in your documents, and securely managing the keys.
 
-## Setup Key Vault Collection
-The first step involves setting up the key vault collection, which stores the encryption keys. 
+Key Concepts
+- **Encryption**: CSFLE encrypts sensitive data before it reaches the MongoDB cluster, ensuring that the 
+data remains secure during transit and at rest.
+- **Master Key**: A master key is used to encrypt Data Encryption Keys (DEK). The master key must be securely 
+managed and protected.
+- **Data Encryption Keys (DEK)**: DEKs are used to encrypt individual fields within the MongoDB documents. 
+DEKs themselves are encrypted using the master key.
+- **Manual and Automatic Encryption**: CSFLE supports both manual and automatic encryption. In this workshop, 
+we will use manual encryption which does not require MongoDB Enterprise or Atlas.
 
-## Configuration:
-Create a unique index on the keyAltNames field to ensure each key is easily retrievable without duplication.
-Example Java Code Snippet:
+## GDPR Compliance
+CSFLE is an excellent tool for ensuring compliance with data protection regulations such as GDPR. 
+It provides a method to securely encrypt and manage sensitive data fields, allowing for easy implementation 
+of "right-to-be-forgotten" policies by simply deleting the corresponding DEKs. This ensures that data 
+cannot be restored from backups or logs once the key is deleted, making it a powerful feature for data 
+privacy and security.
+
+## The Master Key
+A master key is necessary to encrypt and decrypt Data Encryption Keys (DEK). 
+Here’s how you can generate and store a master key locally:
+
 ```java
-MongoDatabase db = mongoClient.getDatabase("encryption");
-MongoCollection<Document> keyVault = db.getCollection("__keyVault");
-keyVault.createIndex(Indexes.ascending("keyAltNames"), new IndexOptions().unique(true));
-```
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.security.SecureRandom;
+import java.util.Arrays;
 
-## Creating Data Encryption Keys (DEKs)
-Data Encryption Keys (DEKs) are used to encrypt the sensitive fields specified in the MongoDB documents.
+public class MasterKey {
+    private static final int SIZE_MASTER_KEY = 96;
+    private static final String MASTER_KEY_FILENAME = "master_key.txt";
 
-DEK Generation Process:
-Utilize the ClientEncryption class to generate DEKs.
-Store these keys in the key vault collection, ensuring they are managed securely and efficiently.
-Entity Encryption with JSON Schemas
-Define your application data models using Spring Data MongoDB and annotate fields that require encryption.
+    public static void main(String[] args) {
+        new MasterKey().tutorial();
+    }
 
-Example Entity Class:
-```java
-@Document(collection = "users")
-public class User {
-    @Id
-    private String id;
-    @Encrypted(keyId = "userKey", algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic")
-    private String ssn; // Social Security Number
+    private void tutorial() {
+        final byte[] masterKey = generateNewOrRetrieveMasterKeyFromFile(MASTER_KEY_FILENAME);
+        System.out.println("Master Key: " + Arrays.toString(masterKey));
+    }
+
+    private byte[] generateNewOrRetrieveMasterKeyFromFile(String filename) {
+        byte[] masterKey = new byte[SIZE_MASTER_KEY];
+        try {
+            retrieveMasterKeyFromFile(filename, masterKey);
+            System.out.println("An existing Master Key was found in file \"" + filename + "\".");
+        } catch (IOException e) {
+            masterKey = generateMasterKey();
+            saveMasterKeyToFile(filename, masterKey);
+            System.out.println("A new Master Key has been generated and saved to file \"" + filename + "\".");
+        }
+        return masterKey;
+    }
+
+    private void retrieveMasterKeyFromFile(String filename, byte[] masterKey) throws IOException {
+        try (FileInputStream fis = new FileInputStream(filename)) {
+            fis.read(masterKey, 0, SIZE_MASTER_KEY);
+        }
+    }
+
+    private byte[] generateMasterKey() {
+        byte[] masterKey = new byte[SIZE_MASTER_KEY];
+        new SecureRandom().nextBytes(masterKey);
+        return masterKey;
+    }
+
+    private void saveMasterKeyToFile(String filename, byte[] masterKey) {
+        try (FileOutputStream fos = new FileOutputStream(filename)) {
+            fos.write(masterKey);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
 ```
-This annotation tells Spring Data MongoDB to encrypt the ssn field using the specified encryption key and algorithm.
+This code generates a 96-byte master key using a secure random number generator and stores it in a local file named `master_key.txt`. 
+If the file already exists, it reads the key from the file.
 
-## SpEL Expression Evaluation
-Spring Expression Language (SpEL) is used to dynamically assign encryption keys based on the document context. This feature allows for flexible encryption configurations that can vary per document.
+## The Key Management Service (KMS) Provider
+Set up the key management service (KMS) provider to use the master key for creating and managing DEKs.
 
-## JSON Schema and MongoClient Connection
-MongoDB uses JSON Schema to specify which fields should be encrypted. This schema is configured in the MongoClient settings, which enables automatic encryption without altering application logic.
-
-MongoClient Customization:
 ```java
-MongoClientSettings settings = MongoClientSettings.builder()
-    .autoEncryptionSettings(autoEncryptionSettings)
-    .build();
-```
-This settings object configures the client instance to automatically encrypt and decrypt fields based on the defined JSON Schema.
+import java.util.HashMap;
+import java.util.Map;
 
-## Conclusion
-Integrating CSFLE with Spring Data MongoDB provides a powerful tool for developers to secure sensitive data, ensuring that encryption is handled 
-transparently and efficiently. By leveraging CSFLE, applications can meet stringent security and compliance requirements while maintaining performance 
-and data integrity.
+public class KeyManagementService {
+    public static Map<String, Map<String, Object>> getKmsProviders(byte[] localMasterKey) {
+        Map<String, Map<String, Object>> kmsProviders = new HashMap<>();
+        kmsProviders.put("local", new HashMap<>() {{
+            put("key", localMasterKey);
+        }});
+        return kmsProviders;
+    }
+}
+```
+
+This code sets up a local KMS provider using the master key. The KMS provider will be used to create and manage DEKs.
+
+## The Clients
+Set up two different clients:
+
+- **ClientEncryption**: Used to create Data Encryption Keys (DEK) and encrypt fields manually.
+- **MongoClient**: A conventional MongoDB connection used to read and write documents, configured to 
+automatically decrypt the encrypted fields.
+
+### ClientEncryption
+This code creates a `ClientEncryption` instance using the KMS provider and key vault namespace.
+```java
+import com.mongodb.*;
+import com.mongodb.client.vault.ClientEncryption;
+import com.mongodb.client.vault.ClientEncryptions;
+import com.mongodb.client.model.vault.ClientEncryptionSettings;
+
+public class EncryptionClient {
+    public static ClientEncryption getClientEncryption(Map<String, Map<String, Object>> kmsProviders) {
+        ClientEncryptionSettings ces = ClientEncryptionSettings.builder()
+                .keyVaultMongoClientSettings(MongoClientSettings.builder()
+                        .applyConnectionString(new ConnectionString("mongodb://localhost"))
+                        .build())
+                .keyVaultNamespace("csfle.vault")
+                .kmsProviders(kmsProviders)
+                .build();
+
+        return ClientEncryptions.create(ces);
+    }
+}
+```
+
+### MongoClient
+This code creates a `MongoClient` instance configured with auto-encryption settings to automatically decrypt encrypted fields.
+```java
+import com.mongodb.MongoClientSettings;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.model.vault.AutoEncryptionSettings;
+
+public class MongoDBClient {
+    public static MongoClient getMongoClient(Map<String, Map<String, Object>> kmsProviders) {
+        AutoEncryptionSettings aes = AutoEncryptionSettings.builder()
+                .keyVaultNamespace("csfle.vault")
+                .kmsProviders(kmsProviders)
+                .bypassAutoEncryption(true)
+                .build();
+
+        MongoClientSettings mcs = MongoClientSettings.builder()
+                .applyConnectionString(new ConnectionString("mongodb://localhost"))
+                .autoEncryptionSettings(aes)
+                .build();
+
+        return MongoClients.create(mcs);
+    }
+}
+```
+
+## Unique Index on Key Alternate Names
+Before creating your first Data Encryption Key (DEK), create a unique index on the 
+key alternate names to ensure that each key has a unique name.
+
+```java
+import com.mongodb.client.MongoCollection;
+import org.bson.Document;
+
+public class IndexManager {
+    public static void createUniqueIndex(MongoCollection<Document> vaultCollection) {
+        vaultCollection.createIndex(ascending("keyAltNames"),
+                new IndexOptions().unique(true).partialFilterExpression(exists("keyAltNames")));
+    }
+}
+```
+This code creates a unique index on the `keyAltNames` field in the key vault collection 
+to ensure that each DEK has a unique name.
+
+## Create Data Encryption Keys
+Create Data Encryption Keys (DEK) for encrypting specific fields in your documents.
+
+```java
+import org.bson.BsonBinary;
+import com.mongodb.client.vault.ClientEncryption;
+
+public class DataEncryptionKeyManager {
+    public static BsonBinary createDataEncryptionKey(ClientEncryption encryption, String keyAltName) {
+        return encryption.createDataKey("local", new DataKeyOptions().keyAltNames(List.of(keyAltName)));
+    }
+}
+```
+
+This creates a DEK with a specified alternate name using the ClientEncryption instance.
+
+## Create and insert encrypted documents using the DEKs.
+
+This snippet creates a document with encrypted fields and inserts it into the specified MongoDB collection. It is paraphrased from
+the repo we provided you:
+
+```java
+import org.bson.BsonBinary;
+import org.bson.BsonString;
+import org.bson.Document;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.vault.ClientEncryption;
+
+public class DocumentManager {
+    public static Document createEncryptedDocument(ClientEncryption encryption, String name, int age, String phone, String bloodType, BsonBinary keyId) {
+        BsonBinary encryptedPhone = encryption.encrypt(new BsonString(phone), new EncryptOptions("AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic").keyId(keyId));
+        BsonBinary encryptedBloodType = encryption.encrypt(new BsonString(bloodType), new EncryptOptions("AEAD_AES_256_CBC_HMAC_SHA_512-Random").keyId(keyId));
+
+        return new Document("name", name)
+                .append("age", age)
+                .append("phone", encryptedPhone)
+                .append("blood_type", encryptedBloodType);
+    }
+
+    public static void insertDocuments(MongoCollection<Document> collection, Document... documents) {
+        collection.insertMany(Arrays.asList(documents));
+    }
+}
+```
+
+Here is what Bobby and Alice documents look like in my `encrypted.users` collection:
+
+### Bobby
+```json
+{
+  "_id" : ObjectId("6054d91c26a275034fe53300"),
+  "name" : "Bobby",
+  "age" : 33,
+  "phone" : BinData(6,"ATKkRdZWR0+HpqNyYA7zgIUCgeBE4SvLRwaXz/rFl8NPZsirWdHRE51pPa/2W9xgZ13lnHd56J1PLu9uv/hSkBgajE+MJLwQvJUkXatOJGbZd56BizxyKKTH+iy+8vV7CmY="),
+  "blood_type" : BinData(6,"AjKkRdZWR0+HpqNyYA7zgIUCUdc30A8lTi2i1pWn7CRpz60yrDps7A8gUJhJdj+BEqIIx9xSUQ7xpnc/6ri2/+ostFtxIq/b6IQArGi+8ZBISw=="),
+  "medical_record" : BinData(6,"AjKkRdZWR0+HpqNyYA7zgIUESl5s4tPPvzqwe788XF8o91+JNqOUgo5kiZDKZ8qudloPutr6S5cE8iHAJ0AsbZDYq7XCqbqiXvjQobObvslR90xJvVMQidHzWtqWMlzig6ejdZQswz2/WT78RrON8awO")
+}
+```
+### Alice
+```json
+{
+  "_id" : ObjectId("6054d91c26a275034fe53301"),
+  "name" : "Alice",
+  "age" : 28,
+  "phone" : BinData(6,"AX7Xd65LHUcWgYj+KbUT++sCC6xaCZ1zaMtzabawAgB79quwKvld8fpA+0m+CtGevGyIgVRjtj2jAHAOvREsoy3oq9p5mbJvnBqi8NttHUJpqooUn22Wx7o+nlo633QO8+c="),
+  "blood_type" : BinData(6,"An7Xd65LHUcWgYj+KbUT++sCTyp+PJXudAKM5HcdX21vB0VBHqEXYSplHdZR0sCOxzBMPanVsTRrOSdAK5yHThP3Vitsu9jlbNo+lz5f3L7KYQ==")
+}
+```
+
+Client Side Field Level Encryption currently provides 
+two different algorithms to encrypt the data you want to secure.
+### Deterministic: AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic
+With this algorithm, the result of the encryption ─ given the same inputs (value and DEK) ─ is 
+deterministic. This means that we have a greater support for read operations, but encrypted data with low 
+cardinality is susceptible to frequency analysis attacks, where bad actors can continually monitor encryted data to reverse-engineer the 
+encryption.
+If I want to be able to retrieve users by phone numbers, I must use the deterministic algorithm. As a phone number is likely 
+to be unique in my collection of users, it's safe to use this algorithm here.
+### Non-deterministic: AEAD_AES_256_CBC_HMAC_SHA_512-Random
+With this algorithm, the result of the encryption is always different. It provides the strongest guarantees of data 
+confidentiality, even when the cardinality is low, but prevents read operations based on these fields.
+In my example, the blood type has a low cardinality and it doesn't make sense to search in my user collection by blood type anyway, so it's 
+safe to use this algorithm for this field.
+
+## Querying Encrypted Documents
+To query encrypted fields, you need to encrypt the query field using the same DEK.
+To read Bobby's Document:
+
+```java
+import org.bson.BsonBinary;
+import org.bson.BsonString;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.vault.ClientEncryption;
+import org.bson.Document;
+
+public class QueryManager {
+    public static Document findEncryptedDocumentByPhone(ClientEncryption encryption, MongoCollection<Document> collection, String phone, String keyAltName) {
+        BsonBinary encryptedPhone = encryption.encrypt(new BsonString(phone), new EncryptOptions("AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic").keyAltName(keyAltName));
+        return collection.find(eq("phone", encryptedPhone)).first();
+    }
+}
+```
+This encrypts the phone number using the DEK associated with Bobby and uses this encrypted 
+value to query the users collection for Bobby's document. The result is then printed out.
+
+```json
+{
+  "_id": {
+    "$oid": "6054d91c26a275034fe53300"
+  },
+  "name": "Bobby",
+  "age": 33,
+  "phone": "01 23 45 67 89",
+  "blood_type": "A+",
+  "medical_record": [
+    {
+      "test": "heart",
+      "result": "bad"
+    }
+  ]
+}
+```
+
+## Removing DEK and Querying Document
+To remove Alice's Document and verify that removing a DEK makes the associated encrypted data irretrievable.
+```java
+public class KeyRemovalTest {
+    public static void main(String[] args) {
+        byte[] localMasterKey = getMasterKey("master_key.txt");
+        Map<String, Map<String, Object>> kmsProviders = KeyManagementService.getKmsProviders(localMasterKey);
+
+        MongoClient mongoClient = MongoDBClient.getMongoClient(kmsProviders);
+        MongoCollection<Document> vaultCollection = mongoClient.getDatabase("csfle").getCollection("vault");
+
+        // Remove Alice's DEK
+        vaultCollection.deleteOne(eq("keyAltNames", "Alice"));
+
+        // Attempt to read Alice's document
+        MongoCollection<Document> usersCollection = mongoClient.getDatabase("test").getCollection("users");
+        Document aliceDoc = usersCollection.find(eq("name", "Alice")).first();
+
+        if (aliceDoc != null) {
+            System.out.println("Alice's document: " + aliceDoc.toJson());
+        } else {
+            System.out.println("Alice's document not found.");
+        }
+    }
+
+    private static byte[] getMasterKey(String filename) {
+        byte[] masterKey = new byte[96];
+        try (FileInputStream fis = new FileInputStream(filename)) {
+            fis.read(masterKey, 0, 96);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read master key from file", e);
+        }
+        return masterKey;
+    }
+}
+```
+This deletes Alice's DEK from the key vault collection and attempts to read Alice's document 
+from the users collection. Without the DEK, the encrypted fields in Alice's document cannot be decrypted, 
+demonstrating the security of CSFLE.
+
+If I try to read it immediately after deleting her document, there is a great chance that I will still able to do so because of the 
+[60 seconds Data Encryption Key Cache](https://github.com/mongodb/specifications/blob/master/source/client-side-encryption/client-side-encryption.md) that is managed by `libmongocrypt`.
+This cache is important because, without it, multiple back-and-forth would be necessary to decrypt the 
+document. It's critical to prevent CSFLE from killing the performances of your MongoDB cluster.
