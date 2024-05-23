@@ -347,3 +347,9 @@ If I try to read it immediately after deleting her document, there is a great ch
 [60 seconds Data Encryption Key Cache](https://github.com/mongodb/specifications/blob/master/source/client-side-encryption/client-side-encryption.md) that is managed by `libmongocrypt`.
 This cache is important because, without it, multiple back-and-forth would be necessary to decrypt the 
 document. It's critical to prevent CSFLE from killing the performances of your MongoDB cluster.
+
+To see all this in action, run the `ClientSideFieldLevelEncryption` class:
+
+```bash
+mvn spring-boot:run -Dspring-boot.run.arguments="csfle"
+```
