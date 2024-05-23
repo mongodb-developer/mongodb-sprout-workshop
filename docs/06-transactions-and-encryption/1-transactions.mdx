@@ -12,32 +12,40 @@ will see a consistent snapshot of the database, and modifications made by a tran
 3. **Change Streams:** MongoDB allows applications to access real-time data changes without the complexity and risk of tailing the oplog. 
 This feature, introduced in MongoDB 3.6, enables applications to stream changes to documents in a database in real-time.  
 
-Always start the ChangeStreams class in the transactions package first because it creates the product collection with the required JSON Schema. See the related blog post.
+Always start the `ChangeStreams` class in the transactions package first because it creates the product 
+collection with the required JSON Schema. See the related blog post.
 
 ## Example Scenario: Implementing a Shopping Cart
-Let’s consider a scenario where a shopping cart application needs to manage product inventory and customer carts atomically to prevent selling more items than available in stock.
-
-### Step 1: Setting Up Your Environment
-Clone the Java project using Git and set up the project:
-
+Switch to `session3` for this exercise:
 ```bash
-git clone git@github.com:mongodb-developer/java-quick-start.git
-cd java-quick-start
+git checkout session3
 ```
 
-### Step 2: Understanding the Code Structure
+Let’s consider a scenario where a shopping cart application needs to manage product inventory and customer 
+carts atomically to prevent selling more items than available in stock.
+
+### Understanding the Code Structure
 The project contains two main classes:
 
 - `ChangeStreams.java`: Monitors data changes in MongoDB.
 - `Transactions.java`: Handles the transaction logic.
 
-### Step 3: Running the Demo
-Run the ChangeStreams Class:
+For this example, two collections are required because we are dealing with two different business entities: 
+the stock management and the shopping cart each client can create during shopping. 
+The lifecycles of each document in these collections are different.  
+
+A document in the product collection represents an item I’m selling. This contains the current price of 
+the product and the current stock, created in a POJO to represent it [Product.java](https://github.com/mongodb-developer/mdb-java-workshop/blob/session3-complete/src/main/java/com/mongodb/quickstart/transactions/models/Product.java).
+
+### Running the Demo
+You'll need two terminals for this:
+
+Run the `ChangeStreams` Class:
 ```bash
 mvn spring-boot:run -Dspring-boot.run.arguments="change-streams"
 ```
 
-Run the Transactions Class in a Separate Terminal:
+Run the `Transactions` Class in a Separate Terminal:
 
 ```bash
 mvn spring-boot:run -Dspring-boot.run.arguments="transactions"
@@ -49,5 +57,24 @@ lead to inconsistencies if one operation fails.
 - **With Transaction**: Perform both operations atomically. If the stock is insufficient, the transaction 
 will roll back, preventing any changes to the database and ensuring consistency.
 
+Here is an example of performing operations within a transaction:
+
+```java
+session.startTransaction(TransactionOptions.builder().writeConcern(WriteConcern.MAJORITY).build());
+aliceWantsTwoExtraBeers(session);
+sleep();
+removingBeerFromStock(session);
+session.commitTransaction();
+```
+
+### Explanation:
+- `session.startTransaction(...)`: Begins a new transaction with majority write concern, ensuring that the operations are acknowledged by the majority of the nodes.
+- `aliceWantsTwoExtraBeers(session)`: Adds two extra beers to Alice's cart within the transaction.
+- `sleep()`: Pauses the execution momentarily, simulating a delay.
+- `removingBeerFromStock(session)`: Decreases the beer stock within the transaction.
+- `session.commitTransaction()`: Commits the transaction, making all changes permanent only if all operations succeed.
+
 ## Conclusion
-MongoDB’s support for multi-document transactions allows developers to handle complex data changes with ease, ensuring data integrity and consistency across operations. This makes MongoDB suitable for applications requiring robust transactional support, similar to traditional relational databases.
+MongoDB’s support for multi-document transactions allows developers to handle complex data changes with ease, 
+ensuring data integrity and consistency across operations. This makes MongoDB suitable for applications 
+requiring robust transactional support, similar to traditional relational databases.
