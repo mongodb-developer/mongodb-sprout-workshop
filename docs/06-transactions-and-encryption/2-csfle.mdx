@@ -20,7 +20,6 @@ DEKs themselves are encrypted using the master key.
 - **Manual and Automatic Encryption**: CSFLE supports both manual and automatic encryption. In this workshop, 
 we will use manual encryption which does not require MongoDB Enterprise or Atlas.
 
-## GDPR Compliance
 CSFLE is an excellent tool for ensuring compliance with data protection regulations such as GDPR. 
 It provides a method to securely encrypt and manage sensitive data fields, allowing for easy implementation 
 of "right-to-be-forgotten" policies by simply deleting the corresponding DEKs. This ensures that data 
@@ -256,7 +255,7 @@ two different algorithms to encrypt the data you want to secure.
 ### Deterministic: AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic
 With this algorithm, the result of the encryption ─ given the same inputs (value and DEK) ─ is 
 deterministic. This means that we have a greater support for read operations, but encrypted data with low 
-cardinality is susceptible to frequency analysis attacks, where bad actors can continually monitor encryted data to reverse-engineer the 
+cardinality is susceptible to frequency analysis attacks, where bad actors can continually monitor encrypted data to reverse-engineer the 
 encryption.
 If I want to be able to retrieve users by phone numbers, I must use the deterministic algorithm. As a phone number is likely 
 to be unique in my collection of users, it's safe to use this algorithm here.

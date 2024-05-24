@@ -6,22 +6,40 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 # What is MongoDB
 
-MongoDB is a type of NoSQL database that is used for managing large volumes of data. 
-The name “Mongo” comes from “Humongous,” describing the data size the software is meant for. 
+MongoDB is an document-oriented database that is designed to store a large scale of data 
+and also allows you to work with that data very efficiently. It is a **NoSQL** (Not only SQL) database 
+because it uses a document data model, different from the tabular databases that store data with relational tables.  
 
-MongoDB is a document database. 
-MongoDB stores data in flexible, JSON-like (BSON) documents, meaning fields can vary from document to document 
-and data structure can be changed over time.
+The best way to start understanding MongoDB basics is to grasp the following comparison:
 
-The document model maps to the objects in your application code, making data easy to work with.
+| MongoDB           | Traditional SQL   |
+|-------------------|-------------------|
+| Database          | Database          |
+| Collection        | Table             |
+| Document          | Row               |
+| $lookup           | Join              |
+| Index             | Index             |
+| ACID Transaction  | ACID transaction  |
+| Single Machine    | Multiple Nodes    |
 
-MongoDB is a distributed database at its core, so high availability, horizontal scaling, 
-and geographic distribution are built in and easy to use.
 
-MongoDB uses collections to store a bulk load of data. Within the collections are documents analogous to rows 
-in a table in the relational database system. Documents (which can have multiple and different fields and 
-data types) are made up of keys, the most basic data unit in MongoDB. 
+The MongoDB database contains **collections** just like the MYSQL database contains tables. You are allowed to create 
+multiple databases and multiple collections in each database.  
 
-One can alter the structure of already saved data in a document under the NoSQL MongoDB by adding or 
-removing new and current fields. Different data types can also be used with the same document. 
-This gives MongoDB a flexible structure. 
+Inside of the collection we have **documents**. These documents contain the data we want to store in the 
+MongoDB database. MongoDB can handle dynamic data models (schemaless) and schema that can easily store unstructured data sets.
+
+![MongoDB sample document](/img/document.png)
+
+The documents are created using the fields. Fields are **key-value pairs** in the documents, like columns in 
+the relation database. 
+
+The value of the fields can be of any **BSON** (Binary JSON) data types like double, string, boolean, etc.  
+
+The data stored in the MongoDB is in the format of BSON documents, and this BSON is stored and queried more efficiently.
+
+In MongoDB documents, you are allowed to store nested data. This nesting of data allows you to 
+create complex relations between data and store them in the same document which makes the working and fetching 
+of data extremely efficient as compared to SQL. In SQL, you need to write complex joins to get the data from table 1 and table 2. 
+
+The maximum size of the BSON document is 16MB.

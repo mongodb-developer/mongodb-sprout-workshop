@@ -7,7 +7,8 @@ With an aggregation, each step of the pipeline takes in a document/documents, an
 applying an operation, and then the next stage takes in the output of this stage to apply the next operation. 
 
 ## Basic Concepts
-The Aggregation Framework in Spring Data MongoDB is built on three main components: `Aggregation`, `AggregationDefinition`, and `AggregationResults`.
+The Aggregation Framework in Spring Data MongoDB is built on three main components: `Aggregation`, 
+`AggregationDefinition`, and `AggregationResults`.
 
 ## Aggregation
 - **Definition:** Represents a MongoDB aggregation operation and holds the instructions for the aggregation pipeline.
@@ -102,7 +103,7 @@ public class SalesCustomRepositoryImpl implements SalesCustomRepository {
     ```java
     Aggregation aggregation = Aggregation.newAggregation(matchStage);
     ```
-    - This constructs an aggregation pipeline with only the MatchOperation. You can add more stages as needed.
+    - This constructs an aggregation pipeline with only the `MatchOperation`. You can add more stages as needed.
 4. Execute the Aggregation:
     ```java
     AggregationResults<SaleDTO> results = mongoTemplate.aggregate(aggregation, "sales", SaleDTO.class);
@@ -112,6 +113,53 @@ public class SalesCustomRepositoryImpl implements SalesCustomRepository {
 
 The `MatchOperation` is a way to filter documents in an aggregation pipeline. By defining criteria with the `Criteria` class 
 and using the `Aggregation.match` method, you can filter documents based on conditions in Spring Data MongoDB.
+
+## A Couple More Options
+### group - GroupOperation
+The `GroupOperation` corresponds to MongoDB's `$group` stage. It is used to group documents by a specified 
+key and perform operations on the grouped data to return a single result for each group.
+
+```java
+GroupOperation groupOperation = Aggregation.group("field").sum("value").as("total");
+```
+- **group("field")**: Groups documents by the specified field.
+- **sum("value").as("total")**: Computes the sum of the value field for each group and stores the result in a field named total.
+
+### project - ProjectionOperation
+The `ProjectionOperation` corresponds to MongoDB's `$project` stage. It reshapes each document in the stream 
+by including, excluding, or adding new fields.
+
+```java
+ProjectionOperation projectOperation = Aggregation.project("field1", "field2")
+    .andExpression("field1 + field2").as("newField");
+```
+- **project("field1", "field2")**: Includes field1 and field2 in the output documents.
+- **andExpression("field1 + field2").as("newField")**: Adds a new field by combining field1 and field2.
+
+### unwind - UnwindOperation
+The `UnwindOperation` corresponds to MongoDB's `$unwind` stage. It deconstructs an array field 
+from the input documents to output a document for each element of the array.
+
+```java
+UnwindOperation unwindOperation = Aggregation.unwind("arrayField");
+```
+- **unwind("arrayField")**: The name of the array field to unwind. Each element of the array will be output as a separate document.
+
+### sort / sortByCount - SortOperation / SortByCountOperation
+The `SortOperation` corresponds to MongoDB's `$sort` stage, which sorts input documents in the specified order. 
+The `SortByCountOperation` is used for sorting by count.
+
+```java
+SortOperation sortOperation = Aggregation.sort(Sort.by(Sort.Order.asc("field1"), Sort.Order.desc("field2")));
+```
+- **sort(Sort.by(...))**: Sorts documents by the specified fields.
+- **Sort.Order.asc("field1")**: Sorts documents in ascending order by field1.
+- **Sort.Order.desc("field2")**: Sorts documents in descending order by field2.
+
+```java
+SortByCountOperation sortByCountOperation = Aggregation.sortByCount("field");
+```
+- **sortByCount("field")**: Groups documents by field and sorts by the count of each group.
 
 ## Supported Aggregation Operations & Stages
 The Spring Data MongoDB has support for the following Operations & Stages:
