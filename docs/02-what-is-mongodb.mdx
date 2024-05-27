@@ -20,14 +20,13 @@ The best way to start understanding MongoDB basics is to grasp the following com
 | $lookup           | Join              |
 | Index             | Index             |
 | ACID Transaction  | ACID transaction  |
-| Single Machine    | Multiple Nodes    |
 
 
 The MongoDB database contains **collections** just like the MYSQL database contains tables. You are allowed to create 
 multiple databases and multiple collections in each database.  
 
 Inside of the collection we have **documents**. These documents contain the data we want to store in the 
-MongoDB database. MongoDB can handle dynamic data models (schemaless) and schema that can easily store unstructured data sets.
+MongoDB database. MongoDB can handle dynamic data models (flexible schema) and schema that can easily store unstructured data sets.
 
 ![MongoDB sample document](/img/document.png)
 
@@ -43,3 +42,5 @@ create complex relations between data and store them in the same document which 
 of data extremely efficient as compared to SQL. In SQL, you need to write complex joins to get the data from table 1 and table 2. 
 
 The maximum size of the BSON document is 16MB.
+
+If you're new to the document model, check out our series on [data modelling for MongoDB](https://www.mongodb.com/developer/products/mongodb/schema-design-anti-pattern-summary/?utm_campaign=devrel&utm_source=workshop&utm_term=devrel.springio.workshop.java).

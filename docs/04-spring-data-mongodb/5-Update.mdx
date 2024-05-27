@@ -48,6 +48,35 @@ public void upsertGrade(double studentId, double classId, Grade grade) {
 }
 ```
 
+While the provided method for upserting works, it can be further optimized and made 
+more idiomatic to MongoDB operations. Using the `save` method in Spring Data MongoDB works, 
+but it involves fetching the document first, which can be suboptimal.  
+
+### upsert with MongoTemplate
+A more efficient way to perform upserts is by using MongoDB's upsert functionality directly 
+in a repository query. This way, you avoid the need to fetch the document first, 
+reducing the number of database operations.
+
+Here's how you can do it using `MongoTemplate` for more control and efficiency:
+```java
+@Autowired
+private MongoTemplate mongoTemplate;
+
+public void upsertGrade(double studentId, double classId, Grade grade) {
+    Query query = new Query();
+    query.addCriteria(Criteria.where("studentId").is(studentId)
+            .and("classId").is(classId));
+
+    Update update = new Update();
+    update.set("studentId", studentId);
+    update.set("classId", classId);
+    update.set("comment", "You will learn a lot if you read the MongoDB blog!");
+    update.addToSet("scores").each(new Score("homework", 50d), new Score("quiz", 70d));
+
+    mongoTemplate.upsert(query, update, Grade.class);
+}
+```
+
 ## saveAll (Update Multiple Documents)
 To update multiple documents at once, use the `saveAll()` method provided by the `StudentRepository`. 
 Pass a list of `Grade` objects to this method, and it will update all the grades in a single batch operation.
