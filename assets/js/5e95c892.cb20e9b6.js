@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkmongodb_sprout_workshop=self.webpackChunkmongodb_sprout_workshop||[]).push([[647],{3124:(s,e,r)=>{r.r(e),r.d(e,{default:()=>c});r(6540);var o=r(8215),u=r(9817),n=r(8630),p=r(2831),t=r(7685),a=r(4848);function c(s){return(0,a.jsx)(u.e3,{className:(0,o.A)(n.G.wrapper.docsPages),children:(0,a.jsx)(t.A,{children:(0,p.v)(s.route.routes)})})}}}]);
