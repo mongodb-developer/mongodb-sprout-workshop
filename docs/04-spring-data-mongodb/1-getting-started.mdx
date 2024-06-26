@@ -8,7 +8,7 @@ spring.data.mongodb.database=sample_training
 ```
 From here, Spring Data MongoDB is ready to connect to our database.
 
-You can see in our `Connection.class` how we setup a `MongoClient` using these details. 
+You can see in our `Connection.java` how we setup a `MongoClient` using these details. 
 ```
     public static void main(String[] args) {
         String connectionString = System.getProperty("mongodb.uri");
